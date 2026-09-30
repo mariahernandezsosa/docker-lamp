@@ -1,41 +1,21 @@
 services:
+
+  # --- Servidor web: recibe la petición HTTP del navegador ---------
   web:
-    image: nginx:alpine
-    container_name: web_nginx
+    image: nginx:stable-alpine
     ports:
-      - "8080:80"
+      - "8080:80"                      # puerto_del_host:puerto_del_contenedor
     volumes:
-      - ./src:/var/www/html:ro
+      - ./src:/var/www/html:ro         # nuestro código (solo lectura para Nginx)
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - php
-    networks:
-      - app-network
 
+  # --- Intérprete PHP: ejecuta los .php que Nginx le pasa ---------
   php:
-    build: ./php
-    container_name: php_fpm
+    image: php:8.4-fpm-alpine          # PHP 8.4 (soportado). También funciona con 8.5.
     volumes:
       - ./src:/var/www/html
-    networks:
-      - app-network
-
-  db:
-    image: mysql:8.0
-    container_name: db_mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: practica1
-      MYSQL_USER: maria
-      MYSQL_PASSWORD: medac26
-    volumes:
-      - db_data:/var/lib/mysql
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
-
-volumes:
-  db_data:
+      # Nuestras DIRECTIVAS personalizadas (ver UD2, CE f).
+      # Todo .ini de conf.d se carga al arrancar PHP-FPM.
+      - ./php/ares7.ini:/usr/local/etc/php/conf.d/zz-ares7.ini:ro
